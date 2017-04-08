@@ -4,8 +4,14 @@ remove the tab indentation. (check the rest of the generated files)
 the isALpha etc are part of some kind of char package, google it.
 
 Parse error: naked expression at top level
-    Perhaps you intended to use TemplateHaskell
-== haskell complaining because it cant find a main function
+== 
+parseError :: [Token] -> a
+    parseError _ = error "Parse error" 
+THat 2nd tab shouldnt be there :) OR main = should be HappyParser = since thats our module name
+OR use main = getContents >>= print . parse . lexer
+instead of main getContents >>= print . parse . lexer since that would be a naked expression; as in, not wrapped up
+in a function definition
+
 
 TODO;
 Import expressions and lexer

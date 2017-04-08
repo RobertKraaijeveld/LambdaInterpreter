@@ -7,4 +7,4 @@ main :: IO ()
 main = do
   input <- getContents
   putStrLn "Input:"
-putStrLn input
+  putStrLn input

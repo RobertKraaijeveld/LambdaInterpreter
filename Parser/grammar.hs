@@ -339,6 +339,10 @@ lexVar cs =
         ("in",rest) -> TokenIn : lexer rest
         (var,rest) -> TokenVar var : lexer rest
 
+
+
+-- 'main' function
+main = getContents >>= print . parse . lexer
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
