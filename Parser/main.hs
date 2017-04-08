@@ -6,5 +6,4 @@ import Expressions
 main :: IO ()
 main = do
   input <- getContents
-  putStrLn "Input:"
-  putStrLn input
+  print (HappyParser.parseExpression input)

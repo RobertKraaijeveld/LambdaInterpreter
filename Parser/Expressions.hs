@@ -43,16 +43,3 @@ toString expr = case expr of
         toStringOp Mul = " * "
         toStringOp Sub = " - "
         parentheses value = "(" ++ value ++ ")"
-
-data Token = TokenLet
-    | TokenIn
-    | TokenNum Int
-    | TokenVar String
-    | TokenEq 
-    | TokenLambda
-    | TokenArrow     
-    | TokenPlus
-    | TokenMinus
-    | TokenTimes
-    | TokenOB 
-    | TokenCB 
