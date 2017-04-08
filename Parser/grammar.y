@@ -1,6 +1,7 @@
 {
 module HappyParser where
 
+import Data.Char
 import Expressions
 }
 
@@ -66,7 +67,7 @@ Single: '(' Expression ')' { $2 }
     lexer ('(':cs) = TokenOB : lexer cs
     lexer (')':cs) = TokenCB : lexer cs
 
-    lexNum cs = TokenInt (read num) : lexer rest
+    lexNum cs = TokenNum (read num) : lexer rest
         where (num,rest) = span isDigit cs
 
     lexVar cs =
@@ -78,5 +79,5 @@ Single: '(' Expression ')' { $2 }
 
 
     -- 'main' function
-    HappyParser getContents >>- print . parse . lexer
+    main getContents >>- print . parse . lexer
 }

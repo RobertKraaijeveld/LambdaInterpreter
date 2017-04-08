@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -w #-}
 module HappyParser where
 
+import Data.Char
 import Expressions
 import Control.Applicative(Applicative(..))
 import Control.Monad (ap)
@@ -307,7 +308,7 @@ happySeq = happyDontSeq
 
 
 parseError :: [Token] -> a
-    parseError _ = error "Parse error" 
+parseError _ = error "Parse error" 
 
 
     -- LEXER
@@ -329,7 +330,7 @@ lexer ('*':cs) = TokenTimes : lexer cs
 lexer ('(':cs) = TokenOB : lexer cs
 lexer (')':cs) = TokenCB : lexer cs
 
-lexNum cs = TokenInt (read num) : lexer rest
+lexNum cs = TokenNum (read num) : lexer rest
     where (num,rest) = span isDigit cs
 
 lexVar cs =
@@ -338,19 +339,11 @@ lexVar cs =
         ("in",rest) -> TokenIn : lexer rest
         (var,rest) -> TokenVar var : lexer rest
 
-
-
--- 'main' function
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 {-# LINE 1 "<built-in>" #-}
 {-# LINE 1 "<command-line>" #-}
-
-
-
-
-
-
+{-# LINE 8 "<command-line>" #-}
 # 1 "/usr/include/stdc-predef.h" 1 3 4
 
 # 17 "/usr/include/stdc-predef.h" 3 4
@@ -396,7 +389,7 @@ lexVar cs =
 
 
 
-{-# LINE 6 "<command-line>" #-}
+{-# LINE 8 "<command-line>" #-}
 {-# LINE 1 "/usr/lib/ghc/include/ghcversion.h" #-}
 
 
@@ -415,7 +408,7 @@ lexVar cs =
 
 
 
-{-# LINE 6 "<command-line>" #-}
+{-# LINE 8 "<command-line>" #-}
 {-# LINE 1 "templates/GenericTemplate.hs" #-}
 -- Id: GenericTemplate.hs,v 1.26 2005/01/14 14:47:22 simonmar Exp 
 

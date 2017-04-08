@@ -1,0 +1,13 @@
+if you get any parse error on input =  errors,
+remove the tab indentation. (check the rest of the generated files)
+
+the isALpha etc are part of some kind of char package, google it.
+
+Parse error: naked expression at top level
+    Perhaps you intended to use TemplateHaskell
+== haskell complaining because it cant find a main function
+
+TODO;
+Import expressions and lexer
+pass input to top level parser function and return output
+recursively parse said output to produce the lambda expression result. start simple
