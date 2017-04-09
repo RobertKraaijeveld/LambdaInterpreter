@@ -45,11 +45,6 @@ Single: '(' Expression ')' { $2 }
     | VAR { Var [$1] }    
 
 {
---do we have to split at EACH rule that uses VAR or just the VAR rule? YES
--- so insread make ID a [string] , consisting of VAR split on comma.
--- its quite dirty but hey 
--- this also means ignoring commas in alex >< 
-
 parseError :: [Token] -> a
 parseError _ = error "Parse error"
 

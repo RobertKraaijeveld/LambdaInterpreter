@@ -11,7 +11,7 @@ $alpha = [a-zA-Z]
 $eol   = [\n]
 
 tokens :-
-  \,                             ;
+  \,                            ;
   $eol                          ;
   $white+                       ;
   "#".*                         ;
@@ -26,7 +26,7 @@ tokens :-
   [\*]                          { \s -> TokenTimes }
   \(                            { \s -> TokenOB }
   \)                            { \s -> TokenCB }
-  $alpha [$alpha $digit \_ \']* { \s -> TokenVar s }
+  $alpha [$alpha $digit \, \_ \']* { \s -> TokenVar s }
 
 
 {
