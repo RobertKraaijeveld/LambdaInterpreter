@@ -1,0 +1,3 @@
+TODO
+Find a better solution for more than one lambda parameter instead
+of splitting the string on commas later on in Haskell.
