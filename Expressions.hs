@@ -1,26 +1,35 @@
 module Expressions where
 
-type Id = [String]
-
 data Operator = Add
     | Sub
     | Mul
     deriving (Eq, Show)
 
-data Expression = Body Id Expression
+data Expression = Body [String] Expression
     | Application Expression Expression
-    | Var Id
+    | Var [String]
     | Num Int
     | Binop Operator Expression Expression
     deriving (Eq, Show)
 
+--check if these are correct for multiple lambdas
 getBody :: Expression -> Maybe Expression
-getBody (Body id expr) = Just (Body id expr)
+getBody (Body ids expr) = Just (Body ids expr)
 getBody (Application expr expr') = getBody(expr)
-getBody (Application expr expr') = getBody(expr')
 getBody _ = Nothing
 
---make array output prettier
+--this might lead to race conditions if both are true
+getArgument :: Expression -> Maybe Expression
+getArgument (Body ids expr) = Just (expr)
+getArgument (Application expr expr') = Just (expr')
+getArgument _ = Nothing 
+
+getBodyExprVars :: Expression -> Maybe [String]
+getBodyExprVars (Var strList) = Just (strList)
+getBodyExprVars (Body ids expr) = getBodyExprVars(expr)
+getBodyExprVars _ = Nothing 
+
+--make array output prettier 
 toString :: Expression -> String
 toString expr = case expr of
     (Body id ex) -> parentheses $ "/" ++ show id ++ " -> " ++ toString ex
