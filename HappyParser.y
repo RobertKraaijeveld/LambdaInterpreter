@@ -28,8 +28,8 @@ import Expressions
 %left '*'
 %%
 
-Expression: let VAR '=' Expression in Expression { Application (Body [$2] $6) $4 }
-    | '\\' VAR '->' Expression { Body [$2] $4 }
+Expression: let VAR '=' Expression in Expression { Application (Body [$2] [$6]) $4 }
+    | '\\' VAR '->' Expression { Body [$2] [$4] }
     | Form { $1 }
 
 Form : Form '+' Form { Binop Add $1 $3 }

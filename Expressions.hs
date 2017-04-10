@@ -5,44 +5,40 @@ data Operator = Add
     | Mul
     deriving (Eq, Show)
 
-data Expression = Body [String] Expression
-    | MultiExpression [Expression]
+
+
+data Expression = Body [String] [Expression]
     | Application Expression Expression
     | Var [String]
     | Num Int
     | Binop Operator Expression Expression
     deriving (Eq, Show)
 
---goddamn this is a lot of checking
 --check if these are correct for multiple lambdas
 getBody :: Expression -> Maybe Expression
-getBody (Body ids expr) = Just (Body ids expr)
+getBody (Body ids exprs) = Just (Body ids exprs)
 getBody (Application expr expr') = getBody(expr)
 getBody _ = Nothing
 
+--Alternatively, make this alos return on Num?
+getExprVars :: Expression -> Maybe [String]
+getExprVars (Var strList) = Just (strList)
+getExprVars _ = Nothing 
+
+getBodyExpressions :: Expression -> Maybe [Expression]
+getBodyExpressions (Body ids exprs) = Just(exprs)
+getBodyExpressions _ = Nothing 
+
+--incorrect for multiple arguments ><
 getArgument :: Expression -> Maybe Expression
 getArgument (Application expr expr') = Just (expr')
 getArgument _ = Nothing 
 
---Alternatively, make this alos return on Num?
-getBodyExprVars :: Expression -> Maybe [String]
-getBodyExprVars (Var strList) = Just (strList)
-getBodyExprVars (Body ids expr) = getBodyExprVars(expr)
-getBodyExprVars _ = Nothing 
 
-
---somehow, this returns nothing.
-getMultiExpressionList :: Expression -> Maybe [Expression]
-getMultiExpressionList (MultiExpression expressions) = Just (expressions)
-getMultiExpressionList _ = Nothing
-
-
---include case for MultiExpression!!
 --make array output prettier and remove arrows and shit if there are no body variables
 toString :: Expression -> String
 toString expr = case expr of
-    (Body id ex) -> parentheses $ "/" ++ show id ++ " -> " ++ toString ex
-    (MultiExpression ex) -> "MULTI" ++ show ex 
+    (Body id ex) -> parentheses $ "/" ++ show id ++ " -> " ++ show ex
     (Application ex1 ex2) -> parentheses $ toString ex1 ++ " " ++ toString ex2
     (Binop op ex1 ex2) -> parentheses $ toString ex1 ++ toStringOp op ++ toString ex2
     (Var x) ->  show x 

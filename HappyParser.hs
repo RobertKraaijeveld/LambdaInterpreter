@@ -162,7 +162,7 @@ happyReduction_1 ((HappyAbsSyn4  happy_var_6) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn4
-		 (Application (Body [happy_var_2] happy_var_6) happy_var_4
+		 (Application (Body [happy_var_2] [happy_var_6]) happy_var_4
 	) `HappyStk` happyRest
 
 happyReduce_2 = happyReduce 4 4 happyReduction_2
@@ -172,7 +172,7 @@ happyReduction_2 ((HappyAbsSyn4  happy_var_4) `HappyStk`
 	_ `HappyStk`
 	happyRest)
 	 = HappyAbsSyn4
-		 (Body [happy_var_2] happy_var_4
+		 (Body [happy_var_2] [happy_var_4]
 	) `HappyStk` happyRest
 
 happyReduce_3 = happySpecReduce_1  4 happyReduction_3
