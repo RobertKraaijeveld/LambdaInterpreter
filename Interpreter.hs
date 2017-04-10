@@ -1,22 +1,36 @@
 module Interpreter where
 
+import Debug.Trace
 import Expressions
 
+--think maybeArg or maybeBody might cause the early stoppage
+--alternative is seeing when the ids[] are empty (also, we have to move on to the next body afterwards.)
 interpret :: Expression -> String
 interpret expr 
-            | maybeBody == Nothing || maybeArg == Nothing = toString(expr) 
+            | maybeBody == Nothing || noBodyArgs == True = toString(expr) 
             | otherwise = reduceBody (fromJust(maybeBody)) (fromJust(maybeArg)) 
             where 
                 maybeBody = getBody expr
-                maybeArg = getArgument expr
+                maybeArg = getArgument expr 
+                noBodyArgs = noBodyArgsLeft (fromJust(maybeBody))   
 
 reduceBody :: Expression -> Expression -> String
-reduceBody (Body ids exp) (argExpr)
-            | paramMatch (Body ids exp) == True = interpret (Body reducedIdsList argExpr)
-            | otherwise = interpret (Body reducedIdsList exp) -- second expression removed entirely 
+reduceBody (Body ids exp) (argExpr) --
+            | paramMatch (Body ids exp) == True = interpret (Body reducedIdsList newBodyExpr)
+            | otherwise = interpret (Body reducedIdsList exp) --second expression not looked at anymore 
             where 
-                reducedIdsList = tail ids 
+                newBodyExpr = substArg (Body ids exp) (argExpr)
+                reducedIdsList = drop 1 ids 
 
+--WHY DOES maybeMultiExpressionList RETURN NOTHING???
+substArg :: Expression -> Expression -> Expression
+substArg (Body ids exp) (argExpr) 
+            | maybeMultiExpressionList == Nothing = MultiExpression [exp, argExpr]
+            | otherwise = MultiExpression combined 
+            where 
+                maybeMultiExpressionList = getMultiExpressionList exp
+                combined = argExpr : fromJust(maybeMultiExpressionList)  
+                
 --DONT FORGET TO sanitizeBodyParams EVERYWHERE. MAYBE DO THIS AT TOP LEVEL OR IN TOSTRING?
 --main.hs: Prelude.head: empty list
 paramMatch :: Expression -> Bool
@@ -28,9 +42,11 @@ paramMatch (Body ids exp)
                 separatedBodyExprVars = sanitizeBodyParams bodyExprVars
                 bodyExprVars = if getBodyExprVars exp /= Nothing then fromJust(getBodyExprVars exp) else [] 
 
-
 sanitizeBodyParams :: [String] -> [String]
-sanitizeBodyParams list = splitLambdaParameters (==',') (head list)                                     
+sanitizeBodyParams list = splitLambdaParameters (==',') (head list)     
+
+noBodyArgsLeft :: Expression -> Bool
+noBodyArgsLeft (Body ids exp) = null ids                   
                                         
 --dropWhile = leave out of returnlist if true. So commas themselves are left out
 --break = basically split: break creates a tuple of two lists from the original one separated at condition boundary 
