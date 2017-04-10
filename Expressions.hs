@@ -18,18 +18,17 @@ getBody (Body ids expr) = Just (Body ids expr)
 getBody (Application expr expr') = getBody(expr)
 getBody _ = Nothing
 
---this might lead to race conditions if both are true
 getArgument :: Expression -> Maybe Expression
-getArgument (Body ids expr) = Just (expr)
 getArgument (Application expr expr') = Just (expr')
 getArgument _ = Nothing 
 
+--Alternatively, make this alos return on Num?
 getBodyExprVars :: Expression -> Maybe [String]
 getBodyExprVars (Var strList) = Just (strList)
 getBodyExprVars (Body ids expr) = getBodyExprVars(expr)
 getBodyExprVars _ = Nothing 
 
---make array output prettier 
+--make array output prettier and remove arrows and shit if there are no body variables
 toString :: Expression -> String
 toString expr = case expr of
     (Body id ex) -> parentheses $ "/" ++ show id ++ " -> " ++ toString ex

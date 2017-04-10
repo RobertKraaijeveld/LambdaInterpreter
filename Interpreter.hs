@@ -2,31 +2,28 @@ module Interpreter where
 
 import Expressions
 
---  if (getBody parsedInput) == Nothing then print "nothing" else print $ toString (fromJust (getBody x))
--- case expression of pattern -> result  
 interpret :: Expression -> String
 interpret expr 
             | maybeBody == Nothing || maybeArg == Nothing = toString(expr) 
-            | otherwise = parseBody (fromJust(getBody expr))
+            | otherwise = reduceBody (fromJust(maybeBody)) (fromJust(maybeArg)) 
             where 
                 maybeBody = getBody expr
                 maybeArg = getArgument expr
 
-parseBody :: Expression -> String
-parseBody body 
-            -- go on
-            | paramMatches body == True = toString(body)
-            | otherwise = "other"
-            where
-                paramMatches = paramMatch 
+reduceBody :: Expression -> Expression -> String
+reduceBody (Body ids exp) (argExpr)
+            | paramMatch (Body ids exp) == True = interpret (Body reducedIdsList argExpr)
+            | otherwise = interpret (Body reducedIdsList exp) -- second expression removed entirely 
+            where 
+                reducedIdsList = tail ids 
 
 --DONT FORGET TO sanitizeBodyParams EVERYWHERE. MAYBE DO THIS AT TOP LEVEL OR IN TOSTRING?
+--main.hs: Prelude.head: empty list
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exp) 
             | elem firstId separatedBodyExprVars == True = True   
             | otherwise = False
             where 
-                -- make second where cleaner. Also sanitize body expr vars
                 firstId = head (sanitizeBodyParams ids) 
                 separatedBodyExprVars = sanitizeBodyParams bodyExprVars
                 bodyExprVars = if getBodyExprVars exp /= Nothing then fromJust(getBodyExprVars exp) else [] 
