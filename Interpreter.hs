@@ -3,27 +3,26 @@ module Interpreter where
 import Debug.Trace
 import Expressions
 
-interpret :: Expression -> String
-interpret expr 
-            | maybeBody == Nothing || noBodyArgs == True = toString(expr) 
-            | otherwise = reduceBody (fromJust(maybeBody)) (fromJust(maybeArg)) 
+interpret :: Expression -> [Expression] -> String
+interpret expr argList
+            | maybeBody == Nothing || null argList || noBodyArgs = toString(expr) 
+            | otherwise = reduceBody (fromJust(maybeBody)) argList 
             where 
                 maybeBody = getBody expr
-                maybeArg = getArgument expr 
                 noBodyArgs = noBodyArgsLeft (fromJust(maybeBody))   
-
-reduceBody :: Expression -> Expression -> String
-reduceBody (Body ids exprs) (argExpr) --
-            | paramMatch (Body ids exprs) == True = interpret (Body reducedIdsList newBodyExpr)
-            | otherwise = interpret (Body reducedIdsList exprs) --second expression not looked at anymore 
+ 
+reduceBody :: Expression -> [Expression] -> String
+reduceBody (Body ids exprs) (args) 
+            -- | paramMatch (Body ids exprs) == True = interpret (Body reducedIdsList newBodyExpr) (tail args)
+            | otherwise = interpret (Body ids newBodyExpr) (tail args) --arg gets reduced too
             where 
-                newBodyExpr = substArg (Body ids exprs) (argExpr)
+                newBodyExpr = substArg (Body ids exprs) (head args)
                 reducedIdsList = drop 1 ids 
 
 substArg :: Expression -> Expression -> [Expression]
 substArg (Body ids exprs) (argExpr) = argExpr : exprs  
                 
---this function will break whenever arguments are added to the left instead of to the right...
+--this function will break whenever new arguments are added to the left instead of to the right...
 --DONT FORGET TO sanitizeBodyParams EVERYWHERE. MAYBE DO THIS AT TOP LEVEL OR IN TOSTRING?
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exprs) 

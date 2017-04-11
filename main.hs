@@ -6,5 +6,6 @@ main :: IO ()
 main = do
   input <- getContents
   let parsedInput = HappyParser.parseExpression input
-  print $ show parsedInput
-  print $ interpret parsedInput
+  let args = getArgs parsedInput
+  print $ show args
+  print $ interpret parsedInput args
