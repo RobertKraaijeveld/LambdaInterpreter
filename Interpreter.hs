@@ -11,31 +11,34 @@ interpret expr argList
                 maybeBody = getBody expr
                 noBodyArgs = noBodyArgsLeft (fromJust(maybeBody))   
  
+-- paramMatch doesnt use the sanitizeBodyParams so it fails early
 reduceBody :: Expression -> [Expression] -> String
 reduceBody (Body ids exprs) (args) 
-            -- | paramMatch (Body ids exprs) == True = interpret (Body reducedIdsList newBodyExpr) (tail args)
-            | otherwise = interpret (Body ids newBodyExpr) (tail args) --arg gets reduced too
+            | paramMatch (Body (sanitizeBodyParams ids) exprs) == True = interpret (Body reducedIdsList newBodyExpr) (tail args)
+            | otherwise = interpret (Body reducedIdsList exprs) (tail args) --arg gets reduced too
             where 
                 newBodyExpr = substArg (Body ids exprs) (head args)
-                reducedIdsList = drop 1 ids 
+                reducedIdsList = tail (sanitizeBodyParams ids) 
 
+--also make this remove the head of the rightmost Expressions' stringlist 
 substArg :: Expression -> Expression -> [Expression]
 substArg (Body ids exprs) (argExpr) = argExpr : exprs  
                 
---this function will break whenever new arguments are added to the left instead of to the right...
---DONT FORGET TO sanitizeBodyParams EVERYWHERE. MAYBE DO THIS AT TOP LEVEL OR IN TOSTRING?
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exprs) 
-            | elem firstId separatedBodyExprVars == True = True   
+            | null separatedBodyExprVars || null (sanitizeBodyParams ids) = False
+            | firstId == (head separatedBodyExprVars) = True   
             | otherwise = False
             where 
                 firstId = head (sanitizeBodyParams ids) 
                 separatedBodyExprVars = sanitizeBodyParams bodyExprVars
-                bodyExprVars = if getExprVars  argVarsExpr /= Nothing then fromJust(getExprVars argVarsExpr) else []
+                bodyExprVars = if getExprVars argVarsExpr /= Nothing then fromJust(getExprVars argVarsExpr) else []
                 argVarsExpr = head exprs --this would be the variables after the arrow in a blank lambda.
 
 sanitizeBodyParams :: [String] -> [String]
-sanitizeBodyParams list = splitLambdaParameters (==',') (head list)     
+sanitizeBodyParams [] = []
+sanitizeBodyParams list = splitLambdaParameters (==',') (head list) 
+    
 
 noBodyArgsLeft :: Expression -> Bool
 noBodyArgsLeft (Body ids exprs) = null ids                   

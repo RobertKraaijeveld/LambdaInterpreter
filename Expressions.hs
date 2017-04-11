@@ -12,7 +12,7 @@ data Expression = Body [String] [Expression]
     | Binop Operator Expression Expression
     deriving (Eq, Show)
 
---jesus this is ugly. also, test this first.
+--this is ugly. also, test this first.
 getArgs :: Expression -> [Expression]
 getArgs expr
             | maybeAppExpr /= Nothing = getArgs (fromJust(getArg1 (realAppExpr))) ++ [fromJust(getArg2 (realAppExpr))]
