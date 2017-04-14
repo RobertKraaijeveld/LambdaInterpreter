@@ -2,7 +2,6 @@ module Interpreter where
 
 import Expressions
 
-
 interpret :: Expression -> [Expression] -> String
 interpret expr argList
             | maybeBody == Nothing || null argList || noBodyArgs = toString(expr) 
@@ -16,38 +15,37 @@ reduceBody (Body ids exprs) (args)
             | paramMatch (Body ids exprs) == True = interpret (Body reducedIdsList newBodyExpr) (tail args)
             | otherwise = interpret (Body reducedIdsList exprs) (tail args) --arg gets reduced even if its not moved into body
             where 
-                commaSeprtdIds = sanitizeBodyParams ids
-                reducedIdsList = tail (sanitizeBodyParams ids) 
-                newBodyExpr = substArg (Body reducedIdsList exprs) (head args) ids
+                reducedIdsList = tail commaSeprtdIds
+                commaSeprtdIds = sanitizeBodyParams ids                
+                newBodyExpr = substArg (Body reducedIdsList exprs) (head args) (ids)
 
-      
+
 substArg :: Expression -> Expression -> [String] -> [Expression]
-substArg (Body reducedIds exprs) (argExpr) unmodifiedIds
+substArg (Body reducedIds exprs) (argExpr) unmodifiedIds 
                                             | null exprs = exprs ++ [argExpr]
-                                            | otherwise =  
-                                                    let
-                                                        newIdsExpr = reduceIdsExpr (unmodifiedIds, reducedIds) oldIdsExpr 
-                                                        oldIdsExpr = head exprs --causes errors when exprs is empty
-                                                        exprsWithoutIdExpr = tail exprs
-                                                    in
-                                                        [newIdsExpr] ++ exprsWithoutIdExpr ++ [argExpr]
+                                            | otherwise = [newIdsExpr] ++ exprsWithoutIdExpr ++ [argExpr]
+                                                where
+                                                    newIdsExpr = reduceIdsExpr unmodifiedIds oldIdsExpr 
+                                                    oldIdsExpr = head exprs 
+                                                    exprsWithoutIdExpr = tail exprs
+                                                        
 
+
+
+--is order dependant :(
 --give these better names
---take a tuple of lists, one modified and one unmodified. return modified + reducedIdsResult (which uses unmodified)
-reduceIdsExpr :: ([String], [String]) -> Expression -> Expression
-reduceIdsExpr unmodifiedAndModifiedIds idsExpr =
+reduceIdsExpr :: [String] -> Expression -> Expression
+reduceIdsExpr unmodifiedIds idsExpr =
                                 let
-                                    combined = modifiedIds ++ reducedIdsResult  
-                                    reducedIdsResult = filter (\x -> notElem x (sanitizeBodyParams unmodifiedIds)) bodyIdsList 
-                                    bodyIdsList = sanitizeBodyParams (fromJust(getExprVars idsExpr)) --unsafe
-                                    unmodifiedIds = fst unmodifiedAndModifiedIds
-                                    modifiedIds = snd unmodifiedAndModifiedIds  
+                                    reducedIdsResult = filter (\x -> (head (sanitizeBodyParams unmodifiedIds) == x) == False) bodyIdsList 
+                                    bodyIdsList = sanitizeBodyParams(fromJust(getExprVars idsExpr)) --unsafe. this returns 1 var too little
                                 in
                                     Var combined
 
+
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exprs) 
-            | firstId == (head separatedBodyExprVars) = True    
+            | elem firstId separatedBodyExprVars = True    
             | otherwise = False
             where 
                 firstId = head (sanitizeBodyParams ids) 
@@ -58,9 +56,12 @@ paramMatch (Body ids exprs)
 getVarList :: Expression -> [String]
 getVarList varsExpr = if getExprVars varsExpr /= Nothing then fromJust(getExprVars varsExpr) else []
 
+--the extra conditions make sure that an already sane list, like ["x", "y"] is not re-done.
 sanitizeBodyParams :: [String] -> [String]
 sanitizeBodyParams [] = []
-sanitizeBodyParams list = splitLambdaParameters (==',') (head list) 
+sanitizeBodyParams list 
+                        | length list == 1 = splitLambdaParameters (==',') (head list) 
+                        | otherwise = list
 
 noBodyArgsLeft :: Expression -> Bool
 noBodyArgsLeft (Body ids exprs) = null ids                   
