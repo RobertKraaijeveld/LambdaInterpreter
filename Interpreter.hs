@@ -1,7 +1,7 @@
 module Interpreter where
 
-import Debug.Trace
 import Expressions
+
 
 interpret :: Expression -> [Expression] -> String
 interpret expr argList
@@ -18,17 +18,33 @@ reduceBody (Body ids exprs) (args)
             where 
                 commaSeprtdIds = sanitizeBodyParams ids
                 reducedIdsList = tail (sanitizeBodyParams ids) 
-                newBodyExpr = substArg (Body reducedIdsList exprs) (head args)
-                
-substArg :: Expression -> Expression -> [Expression]
-substArg (Body reducedIds exprs) (argExpr) 
-                                | null exprs = exprs ++ [argExpr]
-                                | otherwise =  
-                                        let
-                                            reducedIdsExpr = Var reducedIds
-                                            exprsWithoutIds= tail exprs
-                                        in
-                                            [reducedIdsExpr] ++ exprsWithoutIds ++ [argExpr]
+                newBodyExpr = substArg (Body reducedIdsList exprs) (head args) ids
+
+      
+substArg :: Expression -> Expression -> [String] -> [Expression]
+substArg (Body reducedIds exprs) (argExpr) unmodifiedIds
+                                            | null exprs = exprs ++ [argExpr]
+                                            | otherwise =  
+                                                    let
+                                                        newIdsExpr = reduceIdsExpr (unmodifiedIds, reducedIds) oldIdsExpr 
+                                                        oldIdsExpr = head exprs --causes errors when exprs is empty
+                                                        exprsWithoutIdExpr = tail exprs
+                                                    in
+                                                        [newIdsExpr] ++ exprsWithoutIdExpr ++ [argExpr]
+
+--give these better names
+--take a tuple of lists, one modified and one unmodified. return modified + reducedIdsResult (which uses unmodified)
+reduceIdsExpr :: ([String], [String]) -> Expression -> Expression
+reduceIdsExpr unmodifiedAndModifiedIds idsExpr =
+                                let
+                                    combined = modifiedIds ++ reducedIdsResult  
+                                    reducedIdsResult = filter (\x -> notElem x (sanitizeBodyParams unmodifiedIds)) bodyIdsList 
+                                    bodyIdsList = sanitizeBodyParams (fromJust(getExprVars idsExpr)) --unsafe
+                                    unmodifiedIds = fst unmodifiedAndModifiedIds
+                                    modifiedIds = snd unmodifiedAndModifiedIds  
+                                in
+                                    Var combined
+
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exprs) 
             | firstId == (head separatedBodyExprVars) = True    
@@ -37,7 +53,7 @@ paramMatch (Body ids exprs)
                 firstId = head (sanitizeBodyParams ids) 
                 separatedBodyExprVars = sanitizeBodyParams bodyExprVars
                 bodyExprVars = getVarList argVarsExpr
-                argVarsExpr = head exprs --EXPRS IS EMPTY AT FIRST RUN, WHY?
+                argVarsExpr = head exprs 
 
 getVarList :: Expression -> [String]
 getVarList varsExpr = if getExprVars varsExpr /= Nothing then fromJust(getExprVars varsExpr) else []

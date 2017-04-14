@@ -53,7 +53,7 @@ getArg2 _ = Nothing
 --make array output prettier and remove arrows and shit if there are no body variables
 toString :: Expression -> String
 toString expr = case expr of
-    (Body id ex) -> parentheses $ "/" ++ show id ++ " -> " ++ show ex
+    (Body id exprs) -> parentheses $ bodyToStr expr
     (Application ex1 ex2) -> parentheses $ toString ex1 ++ " " ++ toString ex2
     (Binop op ex1 ex2) -> parentheses $ toString ex1 ++ toStringOp op ++ toString ex2
     (Var x) ->  show x 
@@ -64,6 +64,22 @@ toString expr = case expr of
         toStringOp Sub = " - "
         parentheses value = "(" ++ value ++ ")" 
 
+--prettify this more
+bodyToStr :: Expression -> String
+bodyToStr (Body ids exprs) 
+                        | null ids = varExprToStr exprs ++ show (tail exprs)
+                        | otherwise = "/" ++ show ids ++ " -> " ++ varExprToStr exprs ++ show (tail exprs)
+                            
+
+--calling show on empty list returns braces, Make it return nothing at all
+--will break if var insertion order is changed
+varExprToStr :: [Expression] -> String
+varExprToStr exprs 
+            | null ids = ""
+            | otherwise = show ids
+            where
+                ids = fromJust(getExprVars idsExpr)
+                idsExpr = head exprs
 
 --ONLY USE THIS AFTER CHECKING THAT OUR MAYBE IS ACTUALLY A JUST
 fromJust :: Maybe a -> a

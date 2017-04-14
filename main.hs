@@ -7,5 +7,8 @@ main = do
   input <- getContents
   let parsedInput = HappyParser.parseExpression input
   let args = getArgs parsedInput
-  print $ show args
-  print $ interpret parsedInput args
+  putStrLn "ORIGINAL: "
+  putStrLn $ toString parsedInput  ++ "\n"
+
+  putStrLn "RESULT: "  
+  putStrLn $ interpret parsedInput args
