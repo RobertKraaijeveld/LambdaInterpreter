@@ -26,10 +26,10 @@ interpret allBodies argList
 
 interpretBody :: Expression -> [Expression] -> String
 interpretBody expr argList
-            | maybeBody == Nothing || null argsWithoutSelf || noBodyArgs = show expr 
-            | otherwise = trace("Interpreting body " ++ show expr ++ " with args " ++ show (getMultiArgs argList) ++ "\n") reduceBody (fromJust(maybeBody)) (getMultiArgs argList)
+            | maybeBody == Nothing || null argsWithoutSelf || noBodyArgs = trace("got some sort of null. maybeBody == " ++ show maybeBody ++ "\n argsWithoutSelf = " ++ show argsWithoutSelf ++ "\n noBodyArgs = " ++ show noBodyArgs)       show expr 
+            | otherwise = trace("Interpreting body " ++ show expr ++ " with args " ++ show (getMultiArgs argList) ++ "\n") reduceBody (fromJust(maybeBody)) (argsWithoutSelf)
             where 
-                argsWithoutSelf = getMultiArgs argList
+                argsWithoutSelf = getMultiArgs argList ++ argList --make into a function call, or otherwise explain why this makes sense and works...
                 maybeBody = getBody expr
                 noBodyArgs = noBodyArgsLeft (fromJust(maybeBody))   
  
