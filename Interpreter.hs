@@ -27,10 +27,9 @@ interpret allBodies argList
 interpretBody :: Expression -> [Expression] -> String
 interpretBody expr argList
             | maybeBody == Nothing || null argsWithoutSelf || noBodyArgs = show expr 
-            | otherwise = trace("Interpreting body " ++ show expr ++ " with args " ++ show argsWithoutSelf ++ "\n") reduceBody (fromJust(maybeBody)) (argsWithoutSelf)
+            | otherwise = trace("Interpreting body " ++ show expr ++ " with args " ++ show (getMultiArgs argList) ++ "\n") reduceBody (fromJust(maybeBody)) (getMultiArgs argList)
             where 
-                argsWithoutSelf = getArgsWithoutSelf expr argsForThisExpr 
-                argsForThisExpr = argList ++ filter(\x -> notElem x argList) (getArgs expr) 
+                argsWithoutSelf = getMultiArgs argList
                 maybeBody = getBody expr
                 noBodyArgs = noBodyArgsLeft (fromJust(maybeBody))   
  
@@ -62,22 +61,6 @@ reduceIdsExpr unmodifiedIds idsExpr =
                                     bodyIdsList = sanitizeBodyParams(fromJust(getExprVars idsExpr)) --unsafe. this returns 1 var too little
                                 in
                                     Var reducedIdsResult
-{-
-UTILITIES
--}                       
-
---is this function too specific?
-getArgsWithoutSelf :: Expression -> [Expression] -> [Expression]
-getArgsWithoutSelf self args
-                        | null applicationTypeArgs  == False = trace("Found app type args. Self is" ++ show self ++ " args original is " ++ show args ++ " \n argsWithSelf = " ++ show argsWithSelf ++ " \n argsWithoutSelf = " ++ show argsWithoutSelf ++ "\n") argsWithoutSelf
-                        | otherwise = args
-                        where 
-                            --The application search needs to go to any depth...
-                            argsWithoutSelf = map(\x -> fromJust(getAppArg2 x)) argsWithSelf ++ nonApplicationTypeArgs 
-                            argsWithSelf = filter (\x -> fromJust(getAppArg1 x) == self) args
-                            applicationTypeArgs = filter (\x -> getAppArg1 x /= Nothing) args --can populate other list too in one line probably..
-                            nonApplicationTypeArgs = filter (\x -> getAppArg1 x == Nothing) args
-                            
 
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exprs) 
