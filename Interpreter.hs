@@ -1,22 +1,46 @@
 module Interpreter where
 
+import qualified Data.Map as Map
+import Debug.Trace
 import Expressions
 
-interpret :: Expression -> [Expression] -> String
-interpret expr argList
-            | maybeBody == Nothing || null argList || noBodyArgs = toString(expr) 
-            | otherwise = reduceBody (fromJust(maybeBody)) argList 
+{-
+get all bodies
+start with first until either arglist is full or body is done.
+do same for next body.
+add all tostr representations to a list of strs
+out that list
+done, only needs prettyfying 
+-}
+
+--het doorsturen van args gaat fout, loopen naar volgend body gaat wel prima.
+--args ziet namelijk de gehele 2e lambda als 1 arg.
+--solution: args per body vinden in interpretBody
+--maar dit kan dubbels geven met reeds bestaande arglist.
+--DUS: fullArgs = bestaande args ++ getArgs van expr die niet ook in bestaande args zitten
+
+interpret :: [Expression] -> [Expression] -> [String]
+interpret allBodies argList
+                    | null allBodies || null argList = trace("interpret arglist or bodieslist is empty \n") []
+                    | otherwise = trace("BodyList is " ++ show allBodies ++ " sending body " ++ show (head allBodies) ++ " with args " ++ show argList) interpret (tail allBodies) argList ++ [(interpretBody (head allBodies) argList)] 
+
+interpretBody :: Expression -> [Expression] -> String
+interpretBody expr argList
+            | maybeBody == Nothing || null argsWithoutSelf || noBodyArgs = show expr 
+            | otherwise = trace("Interpreting body " ++ show expr ++ " with args " ++ show argsWithoutSelf ++ "\n") reduceBody (fromJust(maybeBody)) (argsWithoutSelf)
             where 
+                argsWithoutSelf = getArgsWithoutSelf expr argsForThisExpr 
+                argsForThisExpr = argList ++ filter(\x -> notElem x argList) (getArgs expr) 
                 maybeBody = getBody expr
                 noBodyArgs = noBodyArgsLeft (fromJust(maybeBody))   
  
 reduceBody :: Expression -> [Expression] -> String
 reduceBody (Body ids exprs) (args) 
-            | paramMatch (Body ids exprs) == True = interpret (Body reducedIdsList newBodyExpr) (tail args)
-            | otherwise = interpret (Body reducedIdsList exprs) (tail args) --arg gets reduced even if its not moved into body
+            | paramMatch (Body ids exprs) == True = trace("Got parammatch. Body is " ++ show (Body ids exprs) ++ "\n") interpretBody (Body reducedIdsList newBodyExpr) (tail args)
+            | otherwise = trace("Got no parammatch. Body is " ++ show (Body ids exprs) ++ "\n") interpretBody (Body reducedIdsList exprs) (tail args) --arg gets reduced even if its not moved into body
             where 
-                reducedIdsList = tail commaSeprtdIds
-                commaSeprtdIds = sanitizeBodyParams ids                
+                reducedIdsList = tail commaSeprtdIds 
+                commaSeprtdIds = sanitizeBodyParams ids --                
                 newBodyExpr = substArg (Body reducedIdsList exprs) (head args) (ids)
 
 
@@ -29,9 +53,6 @@ substArg (Body reducedIds exprs) (argExpr) unmodifiedIds
                                                     oldIdsExpr = head exprs 
                                                     exprsWithoutIdExpr = tail exprs
                                                         
-
-
-
 --is order dependant :(
 --give these better names
 reduceIdsExpr :: [String] -> Expression -> Expression
@@ -40,8 +61,23 @@ reduceIdsExpr unmodifiedIds idsExpr =
                                     reducedIdsResult = filter (\x -> (head (sanitizeBodyParams unmodifiedIds) == x) == False) bodyIdsList 
                                     bodyIdsList = sanitizeBodyParams(fromJust(getExprVars idsExpr)) --unsafe. this returns 1 var too little
                                 in
-                                    Var combined
+                                    Var reducedIdsResult
+{-
+UTILITIES
+-}                       
 
+--is this function too specific?
+getArgsWithoutSelf :: Expression -> [Expression] -> [Expression]
+getArgsWithoutSelf self args
+                        | null applicationTypeArgs  == False = trace("Found app type args. Self is" ++ show self ++ " args original is " ++ show args ++ " \n argsWithSelf = " ++ show argsWithSelf ++ " \n argsWithoutSelf = " ++ show argsWithoutSelf ++ "\n") argsWithoutSelf
+                        | otherwise = args
+                        where 
+                            --The application search needs to go to any depth...
+                            argsWithoutSelf = map(\x -> fromJust(getAppArg2 x)) argsWithSelf ++ nonApplicationTypeArgs 
+                            argsWithSelf = filter (\x -> fromJust(getAppArg1 x) == self) args
+                            applicationTypeArgs = filter (\x -> getAppArg1 x /= Nothing) args --can populate other list too in one line probably..
+                            nonApplicationTypeArgs = filter (\x -> getAppArg1 x == Nothing) args
+                            
 
 paramMatch :: Expression -> Bool
 paramMatch (Body ids exprs) 
@@ -52,9 +88,6 @@ paramMatch (Body ids exprs)
                 separatedBodyExprVars = sanitizeBodyParams bodyExprVars
                 bodyExprVars = getVarList argVarsExpr
                 argVarsExpr = head exprs 
-
-getVarList :: Expression -> [String]
-getVarList varsExpr = if getExprVars varsExpr /= Nothing then fromJust(getExprVars varsExpr) else []
 
 --the extra conditions make sure that an already sane list, like ["x", "y"] is not re-done.
 sanitizeBodyParams :: [String] -> [String]

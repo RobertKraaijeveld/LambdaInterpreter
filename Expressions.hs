@@ -1,5 +1,8 @@
 module Expressions where
 
+import qualified Data.Map as Map
+import Debug.Trace
+
 data Operator = Add
     | Sub
     | Mul
@@ -12,14 +15,29 @@ data Expression = Body [String] [Expression]
     | Binop Operator Expression Expression
     deriving (Eq, Show)
 
---this is ugly. also, test this first.
+anyBodies :: Expression -> Bool
+anyBodies expr 
+            | maybeBody /= Nothing = True
+            | otherwise = False
+            where
+                maybeBody = getBody expr
+
+getBodiesFromArgs :: [Expression] -> [Expression]
+getBodiesFromArgs args = 
+                let
+                    nonDoubleArgs = filter(\x -> getBody x /= Nothing) args --this just filters exprs that CONTAIN bodies; we want the bodies themselves.
+                in
+                    map (\x -> fromJust(getBody x)) nonDoubleArgs
+
+--include nullcheck cunt
 getArgs :: Expression -> [Expression]
-getArgs expr
-            | maybeAppExpr /= Nothing = getArgs (fromJust(getArg1 (realAppExpr))) ++ [fromJust(getArg2 (realAppExpr))]
-            | otherwise = []
-            where 
-                realAppExpr = fromJust(maybeAppExpr) --lazy evaluation ftw
-                maybeAppExpr = getApplication expr
+getArgs (Application expr expr') = getArgs (fromJust(getAppArg1 (Application expr expr'))) ++ [fromJust(getAppArg2 (Application expr expr'))] --UGLY, NONCHECKED FROMJUSTS REEEE
+getArgs (Body ids exprs) = getMultiArgs exprs
+getArgs _ = []
+
+getMultiArgs :: [Expression] -> [Expression] 
+getMultiArgs [] = []
+getMultiArgs exprList = getMultiArgs (tail exprList) ++ getArgs (head exprList)
 
 --check if these are correct for multiple lambdas
 getBody :: Expression -> Maybe Expression
@@ -36,19 +54,21 @@ getBodyExpressions :: Expression -> Maybe [Expression]
 getBodyExpressions (Body ids exprs) = Just(exprs)
 getBodyExpressions _ = Nothing 
 
---make these cleaner
+--make these cleaner OH MY LAWD ITS HORRIBLE
 getApplication :: Expression -> Maybe Expression
 getApplication (Application expr expr') = Just (Application expr expr')
 getApplication _ = Nothing 
 
-getArg1 :: Expression -> Maybe Expression
-getArg1 (Application expr expr') = Just (expr)
-getArg1 _ = Nothing 
+getAppArg1 :: Expression -> Maybe Expression
+getAppArg1 (Application expr expr') = Just (expr)
+getAppArg1 _ = Nothing 
 
-getArg2 :: Expression -> Maybe Expression
-getArg2 (Application expr expr') = Just (expr')
-getArg2 _ = Nothing 
+getAppArg2 :: Expression -> Maybe Expression
+getAppArg2 (Application expr expr') = Just (expr')
+getAppArg2 _ = Nothing 
 
+getVarList :: Expression -> [String]
+getVarList varsExpr = if getExprVars varsExpr /= Nothing then fromJust(getExprVars varsExpr) else []
 
 --make array output prettier and remove arrows and shit if there are no body variables
 toString :: Expression -> String
