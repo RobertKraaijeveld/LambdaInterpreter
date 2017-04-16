@@ -8,11 +8,14 @@ Run using:
 
 Valid syntax:
 
-/# = comment, line will be ignored.
-
-\ = lambda symbol substitute
-
--> = lambda arrow
+  /# = comment, line will be ignored.
+  \  lambda symbol substitute
+  -> = lambda arrow
+        
+  So, for example:
+        
+        ((z -> (z)) 1)
+        #this is a basic lambda
 
 All combinations of operators * - + using numbers or alphanumeric variables are valid, but the interpreter won't evaluate them.
 
