@@ -8,11 +8,11 @@ Run using:
 
 Valid syntax:
 
-  /# = comment, line will be ignored.
-  \  lambda symbol substitute
-  -> = lambda arrow
+  - /# = comment, line will be ignored.
+  - \  lambda symbol substitute
+  - -> = lambda arrow
         
-  So, for example:
+So, for example:
         
         ((z -> (z)) 1)
         #this is a basic lambda
