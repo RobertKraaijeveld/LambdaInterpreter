@@ -8,8 +8,10 @@ Run using:
 
 Valid syntax:
 
-# = comment, line will be ignored.
+/# = comment, line will be ignored.
+
 \ = lambda symbol substitute
+
 -> = lambda arrow
 
 All combinations of operators * - + using numbers or alphanumeric variables are valid, but the interpreter won't evaluate them.
