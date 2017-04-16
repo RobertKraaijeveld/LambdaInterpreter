@@ -1,6 +1,0 @@
-TODO
-Find a better solution for more than one lambda parameter instead
-of splitting the string on commas later on in Haskell.
-
-LAMBDA Syntax for input is as follows: ((\x,y -> (x,y)) 1)
-Always separate lambda variables using commas, not whitespaces. 
