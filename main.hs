@@ -2,12 +2,13 @@ import qualified HappyParser
 import Expressions
 import Interpreter
 
-collectAllBodies :: Expression -> [Expression] -> [Expression]
-collectAllBodies rootExpr args
-                        | anyBodies rootExpr == True = [fromJust(maybeInitialBody)] ++ getBodiesFromArgs args
-                        | otherwise = []
-                        where 
-                          maybeInitialBody = getBody rootExpr
+import Debug.Trace
+import Data.List
+
+
+{-
+  MAIN
+-}
 
 main :: IO ()
 main = do
@@ -16,15 +17,12 @@ main = do
   let args = getArgs parsedInput
   let bodies = collectAllBodies parsedInput args   
 
-  putStrLn "ARGS: "
-  putStrLn $ show args  ++ "\n"  
+  let result = interpret (reverse bodies) args
+  let combinedBodies = combineBodies result
 
-  putStrLn "BODIES: "
-  putStrLn $ show bodies  ++ "\n"  --needs to be done for all in list
+  putStrLn "INPUT: "
+  putStrLn $ toString parsedInput  ++ "\n"
 
---getBodiesFromArgs args
-  putStrLn "ORIGINAL: "
-  putStrLn $ show parsedInput  ++ "\n"
-
-  putStrLn "RESULT: "  
-  putStrLn $ show (interpret (reverse bodies) args)
+  putStrLn "RESULT: "
+  putStrLn $ combinedBodies ++ "\n"
+ 

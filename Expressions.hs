@@ -1,8 +1,5 @@
 module Expressions where
 
-import qualified Data.Map as Map
-import Debug.Trace
-
 data Operator = Add
     | Sub
     | Mul
@@ -22,30 +19,37 @@ anyBodies expr
             where
                 maybeBody = getBody expr
 
-getBodiesFromArgs :: [Expression] -> [Expression]
-getBodiesFromArgs args = 
+getBodies :: [Expression] -> [Expression]
+getBodies args = 
                 let
-                    nonDoubleArgs = filter(\x -> getBody x /= Nothing) args --this just filters exprs that CONTAIN bodies; we want the bodies themselves.
+                    nonDoubleArgs = filter(\x -> getBody x /= Nothing) args 
                 in
                     map (\x -> fromJust(getBody x)) nonDoubleArgs
 
---include nullcheck cunt
 getArgs :: Expression -> [Expression]
-getArgs (Application expr expr') = getArgs (fromJust(getAppArg1 (Application expr expr'))) ++ [fromJust(getAppArg2 (Application expr expr'))] --UGLY, NONCHECKED FROMJUSTS REEEE
-getArgs (Body ids exprs) = getMultiArgs exprs
-getArgs _ = []
+getArgs (Application expr expr') = getArgs expr ++ getArgs expr'
+getArgs (Body ids exprs) = [] --not necessary to add as arg: each body is done individually and then they are glued together using combineBodies :)
+getArgs (Binop op expr1 expr2) = [(Binop op expr1 expr2)]
+getArgs (Var strList) = [(Var strList)]
+getArgs (Num n) = [(Num n)]
+getArgs _ = [] 
+
 
 getMultiArgs :: [Expression] -> [Expression] 
 getMultiArgs [] = []
 getMultiArgs exprList = getMultiArgs (tail exprList) ++ getArgs (head exprList)
 
---check if these are correct for multiple lambdas
 getBody :: Expression -> Maybe Expression
 getBody (Body ids exprs) = Just (Body ids exprs)
 getBody (Application expr expr') = getBody(expr)
 getBody _ = Nothing
 
---Alternatively, make this alos return on Num?
+--this is used in the (xyz) BEFORE the arrow
+getBodyIds :: Expression -> [String]
+getBodyIds (Body ids exprs) = splitListByComma ids
+
+
+--whilst this is used in the (xyz) AFTER the arrow
 getExprVars :: Expression -> Maybe [String]
 getExprVars (Var strList) = Just (strList)
 getExprVars _ = Nothing 
@@ -54,7 +58,6 @@ getBodyExpressions :: Expression -> Maybe [Expression]
 getBodyExpressions (Body ids exprs) = Just(exprs)
 getBodyExpressions _ = Nothing 
 
---make these cleaner OH MY LAWD ITS HORRIBLE
 getApplication :: Expression -> Maybe Expression
 getApplication (Application expr expr') = Just (Application expr expr')
 getApplication _ = Nothing 
@@ -70,7 +73,45 @@ getAppArg2 _ = Nothing
 getVarList :: Expression -> [String]
 getVarList varsExpr = if getExprVars varsExpr /= Nothing then fromJust(getExprVars varsExpr) else []
 
---make array output prettier and remove arrows and shit if there are no body variables
+
+{-
+  GLUEING ALL INTERPRETED BODIES TOGETHER
+-}
+
+collectAllBodies :: Expression -> [Expression] -> [Expression]
+collectAllBodies rootExpr args
+                        | anyBodies rootExpr == True = [fromJust(maybeInitialBody)] ++ getBodies args
+                        | otherwise = []
+                        where 
+                          maybeInitialBody = getBody rootExpr
+
+combineBodies :: [Expression] -> String
+combineBodies [] = "Empty"
+combineBodies allExprList = 
+                      let
+                        rootExpr = [head allExprList] 
+                        rootExprBodies = getBodies rootExpr
+                        interpretedBodies = getBodies (tail allExprList)
+                      in
+                        show (bodyExprsToStr (fromJust(getBodyExpressions (head rootExpr))) interpretedBodies)
+
+fullToString :: Expression -> [Expression] -> [String]
+fullToString expr interpretedBodies = case expr of
+              (Body ids exprs) -> [toString (head interpretedBodies)] 
+              (Application expr expr') -> fullToString expr interpretedBodies
+              _  -> [toString expr]
+
+bodyExprsToStr :: [Expression] -> [Expression] -> [String]
+bodyExprsToStr [] _ = []
+bodyExprsToStr bodyExprList interpretedBodies = fullToString (head bodyExprList) interpretedBodies ++ bodyExprsToStr (tail bodyExprList) interpretedBodies  
+
+
+{-
+TO STRING
+-}                            
+
+
+--make array output prettier and remove arrows etc there are no body variables
 toString :: Expression -> String
 toString expr = case expr of
     (Body id exprs) -> parentheses $ bodyToStr expr
@@ -89,10 +130,12 @@ bodyToStr :: Expression -> String
 bodyToStr (Body ids exprs) 
                         | null ids = varExprToStr exprs ++ show (tail exprs)
                         | otherwise = "/" ++ show ids ++ " -> " ++ varExprToStr exprs ++ show (tail exprs)
-                            
+
+{-
+UTILITIES
+-}                            
 
 --calling show on empty list returns braces, Make it return nothing at all
---will break if var insertion order is changed
 varExprToStr :: [Expression] -> String
 varExprToStr exprs 
             | null ids = ""
@@ -101,7 +144,28 @@ varExprToStr exprs
                 ids = fromJust(getExprVars idsExpr)
                 idsExpr = head exprs
 
---ONLY USE THIS AFTER CHECKING THAT OUR MAYBE IS ACTUALLY A JUST
+--WARNING: ONLY USE THIS AFTER CHECKING THAT A MAYBE IS ACTUALLY A JUST
 fromJust :: Maybe a -> a
 fromJust (Just a) = a
 fromJust Nothing = error "fromJust got a Nothing."
+
+
+--the extra conditions make sure that an already sane list, like ["x", "y"] is not re-done.
+splitListByComma :: [String] -> [String]
+splitListByComma [] = []
+splitListByComma list 
+                        | length list == 1 = splitFilter (==',') (head list) 
+                        | otherwise = list
+
+noBodyArgsLeft :: Expression -> Bool
+noBodyArgsLeft (Body ids exprs) = null ids                   
+                                        
+--dropWhile = leave out of returnlist if true. So commas themselves are left out
+--break = basically split: break creates a tuple of two lists from the original one separated at condition boundary 
+--so we break on a comma, then word becomes whatever is before that comma, str'' becomes the rest.
+--we then add word to the returnlist and recurse into str''
+splitFilter :: (Char -> Bool) -> String -> [String]
+splitFilter pred str = case dropWhile pred str of
+                                    "" -> []
+                                    str' -> word : splitFilter pred rest
+                                        where (word, rest) = break pred str'
