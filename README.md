@@ -9,7 +9,7 @@ Run using:
 Valid syntax:
 
   - \# = comment, line will be ignored.
-  - \  lambda symbol substitute
+  - \ = lambda symbol substitute
   - -> = lambda arrow
         
 So, for example:
