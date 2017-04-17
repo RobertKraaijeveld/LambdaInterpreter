@@ -14,8 +14,8 @@ Valid syntax:
         
 So, for example:
         
-        ((z -> (z)) 1)
-        #this is a basic lambda
+        ((\z -> (z)) 1)
+        #this is a basic lambda which will return 1.
 
 All combinations of operators * - + using numbers or alphanumeric variables are valid, but the interpreter won't evaluate them.
 
