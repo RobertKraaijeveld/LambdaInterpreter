@@ -8,7 +8,7 @@ Run using:
 
 Valid syntax:
 
-  - /# = comment, line will be ignored.
+  - # = comment, line will be ignored.
   - \  lambda symbol substitute
   - -> = lambda arrow
         
